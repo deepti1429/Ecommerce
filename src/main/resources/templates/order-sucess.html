@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Order Success</title>
+    <style>
+        /* Styles for the button */
+        .button {
+        margin-top:10px;
+            display: inline-block;
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>Order Placed Successfully!</h1>
+    
+    <div th:if="${success}">
+        <div th:text="${success}"></div>
+    </div>
+    <img src="https://mir-s3-cdn-cf.behance.net/project_modules/disp/31fe3938221437.5968c5a847d93.gif"/>
+    <a th:href="@{/api/products}" class="button">Continue Shopping</a>
+</body>
+</html>

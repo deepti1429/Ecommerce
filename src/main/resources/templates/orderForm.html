@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Order Form</title>
+    <link rel="stylesheet" th:href="@{/order.css}">
+</head>
+<body>
+    <h1>Order Details</h1>
+    
+    <form th:action="@{/api/products/confirm-order}" th:object="${order}" method="post">
+        <div>
+            <label for="name">Name:</label>
+            <input type="text" id="name" th:field="*{name}" required />
+        </div>
+        <div>
+            <label for="mobileNumber">Mobile Number:</label>
+            <input type="text" id="mobileNumber" th:field="*{mobileNumber}" required />
+        </div>
+        <div>
+            <label for="address">Address:</label>
+            <textarea id="address" th:field="*{address}" required></textarea>
+        </div>
+        <div>
+            <label for="email">Email:</label>
+            <input type="email" id="email" th:field="*{email}" required />
+        </div>
+        <div>
+            <label for="paymentMethod">Payment Method:</label>
+            <select id="paymentMethod" th:field="*{paymentMethod}" required>
+                <option value="Credit Card">Credit Card</option>
+                <option value="Debit Card">Debit Card</option>
+                <option value="PayPal">PayPal</option>
+                <option value="Cash on Delivery">Cash on Delivery</option>
+            </select>
+        </div>
+        <div>
+            <button type="submit">Confirm Order</button>
+        </div>
+    </form>
+</body>
+</html>

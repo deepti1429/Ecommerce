@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Shopping Cart</title>
+    <link rel="stylesheet" th:href="@{/cart.css}">
+</head>
+<body>
+    <h1>Shopping Cart</h1>
+    
+    <div th:if="${success}">
+        <div th:text="${success}"></div>
+    </div>
+    
+    <div th:if="${error}">
+        <div th:text="${error}"></div>
+    </div>
+    
+    <div th:if="${not #lists.isEmpty(cartItems)}" class="cart-container">
+        <div th:each="item : ${cartItems}" class="cart-card">
+            <div class="cart-image">
+                <img th:src="@{${item.productImagePath}}" alt="Product Image" width="100" height="100"/>
+            </div>
+            <div class="cart-details">
+                <h2 th:text="${item.productName}"></h2>
+                <p th:text="${item.description}"></p>
+                <p>Price: $<span th:text="${item.price}"></span></p>
+                <form th:action="@{/api/products/remove-from-cart}" method="post">
+                    <input type="hidden" name="cartItemId" th:value="${item.id}" />
+                    <button type="submit">Remove from Cart</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div th:if="${#lists.isEmpty(cartItems)}">
+        <p>Your cart is empty.</p>
+    </div>
+    
+     <div th:if="${not #lists.isEmpty(cartItems)}" class="cart-total">
+        <p>Total Amount: $<span th:text="${totalAmount}"></span></p>
+        <form th:action="@{/api/products/buy}" method="post">
+            <button type="submit">Buy Now</button>
+        </form>
+    </div>
+</body>
+</html>
