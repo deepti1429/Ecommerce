@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Your Orders</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            width: 80%;
+            margin: 20px auto;
+        }
+        .order-card {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .order-header span {
+            font-weight: normal;
+            color: #666;
+        }
+        .order-header .value {
+            font-weight: bold;
+            color: #333;
+        }
+        .order-body {
+            display: flex;
+            align-items: center;
+        }
+        .order-body img {
+            border-radius: 8px;
+            width: 100px;
+            height: 100px;
+            margin-right: 20px;
+        }
+        .order-details {
+            flex-grow: 1;
+        }
+        .order-details p {
+            margin: 5px 0;
+        }
+        .price {
+            font-size: 1.2em;
+            color: #e91e63;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Your Orders</h1>
+        <div class="order-card" th:each="order : ${userOrders}">
+            <div class="order-header">
+                <span>Order ID: <span class="value" th:text="${order.id}">Order ID</span></span>
+                <span>Sold to: <span class="value" th:text="${order.name}">UserName</span></span>
+            </div>
+            <div class="order-body">
+                <img th:src="@{${order.productImagePath}}" alt="Product Image"/>
+                <div class="order-details">
+                    <p th:text="${order.productName}">Product Name</p>
+                    <p th:text="${order.description}">Description</p>
+                    <p class="price" th:text="'$' + ${order.price}">Price</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

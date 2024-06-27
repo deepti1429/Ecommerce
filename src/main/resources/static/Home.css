@@ -142,7 +142,7 @@ nav ul li a:hover {
     transform: translateX(-50%); /* Centers the span horizontally */
     display: inline-block;
     background-color: #ff4d4d;
-    color: white;
+    color: black;
     border-radius: 50%;
     padding: 5px 10px;
     font-size: 12px;
@@ -178,4 +178,15 @@ nav ul li a:hover {
 
         .dropdown:hover .dropbtn {
             background-color: #3e8e41;
+        }
+        .username {
+         font-size:18px;
+            font-weight: bold;
+            color: #EC0A44 ;
+            display: block;
+            padding: 12px 16px;
+            text-align: center;
+        }
+        .username:hover{
+        background-color: #f1f1f1;
         }

@@ -7,7 +7,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -24,10 +23,14 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.sample.loginform.Entity.Cart;
 import com.sample.loginform.Entity.Order;
 import com.sample.loginform.Entity.Product;
+import com.sample.loginform.Entity.User;
 import com.sample.loginform.Repository.CartRepo;
 import com.sample.loginform.Repository.OrderRepo;
 import com.sample.loginform.Repository.ProductRepo;
 import com.sample.loginform.Service.ProductService;
+
+import jakarta.servlet.http.HttpSession;
+import jakarta.transaction.Transactional;
 
 @Controller
 @RequestMapping("/api/products")
@@ -41,43 +44,54 @@ public class ProductController {
 
     @Autowired
     private CartRepo cartRepository;
-    
-    private int cartItemsCount=0;
+
+    @Autowired
+    private OrderRepo orderRepository;
+
+    private int cartItemsCount = 0;
+
+    private static final String UPLOAD_DIR = System.getProperty("user.dir") + "/uploads";
 
     @PostMapping("/add-to-cart")
-    public String addToCart(@RequestParam("productId") Long productId, RedirectAttributes redirectAttributes) {
+    public String addToCart(@RequestParam("productId") Long productId, HttpSession session, RedirectAttributes redirectAttributes) {
         Product product = productRepository.findById(productId).orElse(null);
+        User loggedInUser = (User) session.getAttribute("loggedInUser");
 
-        if (product != null) {
+        if (product != null && loggedInUser != null) {
             Cart cartItem = new Cart();
-            cartItem.setProductId(product.getProductId());
+            cartItem.setProduct(product);
+            cartItem.setUser(loggedInUser);
+            cartItem.setPrice(product.getPrice()); // Set price from Product entity
+            cartItem.setDescription(product.getDescription()); // Set description from Product entity
+            cartItem.setProductImagePath(product.getProductImagePath()); // Set image path from Product entity
             cartItem.setProductName(product.getProductName());
-            cartItem.setDescription(product.getDescription());
-            cartItem.setPrice(product.getPrice());
-            cartItem.setProductImagePath(product.getProductImagePath());
-
+            cartItem.setProductId(product.getProductId());
             cartRepository.save(cartItem);
 
             redirectAttributes.addFlashAttribute("success", "Product added to cart successfully!");
             cartItemsCount++;
-            return "redirect:/api/products";
         } else {
-            redirectAttributes.addFlashAttribute("error", "Product not found!");
-            return "redirect:/api/products";
+            redirectAttributes.addFlashAttribute("error", "Product not found or user not logged in!");
         }
+        
+        return "redirect:/api/products";
     }
 
     @GetMapping("/Cart")
-    public String viewCart(Model model) {
-        List<Cart> cartItems = cartRepository.findAll(); 
-        model.addAttribute("cartItems", cartItems); 
-        double totalAmount = cartItems.stream()
-                .collect(Collectors.summingDouble(Cart::getPrice));
-model.addAttribute("totalAmount", totalAmount);
-        return "Cart";  
-    }
+    public String viewCart(Model model, HttpSession session) {
+        User loggedInUser = (User) session.getAttribute("loggedInUser");
 
-    private static final String UPLOAD_DIR = System.getProperty("user.dir") + "/uploads";
+        if (loggedInUser != null) {
+            Long userId = loggedInUser.getUserId();
+            List<Cart> cartItems = cartRepository.findByUserId(userId);
+            model.addAttribute("cartItems", cartItems);
+            double totalAmount = cartItems.stream().mapToDouble(Cart::getPrice).sum();
+            model.addAttribute("totalAmount", totalAmount);
+            return "Cart";
+        } else {
+            return "redirect:/api/products/login";
+        }
+    }
 
     @PostMapping("/create")
     public String createProduct(
@@ -97,7 +111,6 @@ model.addAttribute("totalAmount", totalAmount);
             Path path = Paths.get(UPLOAD_DIR, fileName);
             Files.copy(productImage.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
             
-            
             Product product = new Product();
             product.setProductId(productId);
             product.setProductName(productName);
@@ -112,70 +125,158 @@ model.addAttribute("totalAmount", totalAmount);
             throw new RuntimeException("Could not save file: " + productImage.getOriginalFilename(), e);
         }
     }
+
     @PostMapping("/remove-from-cart")
-    public String removeFromCart(@RequestParam("cartItemId") Long cartItemId, RedirectAttributes redirectAttributes) {
-        cartRepository.deleteById(cartItemId);
-        redirectAttributes.addFlashAttribute("success", "Product removed from cart successfully!");
-        cartItemsCount--;
-        return "redirect:/api/products/Cart";
+    public String removeFromCart(@RequestParam("cartItemId") Long cartItemId, HttpSession session, RedirectAttributes redirectAttributes) {
+        User loggedInUser = (User) session.getAttribute("loggedInUser");
+        if (loggedInUser != null) {
+            cartRepository.deleteById(cartItemId);
+            redirectAttributes.addFlashAttribute("success", "Product removed from cart successfully!");
+            cartItemsCount--;
+            return "redirect:/api/products/Cart";
+        } else {
+            return "redirect:/api/products/login";
+        }
     }
-    
+
     public int getCartItemsCount() {
-		return cartItemsCount;
-	}
+        return cartItemsCount;
+    }
 
     @ModelAttribute("cartItemCount")
     public int getCartItemCount() {
         return cartItemsCount;
     }
 
-	@GetMapping
-    public String getAllProducts(Model model) {
+    @GetMapping
+    public String getAllProducts(Model model, HttpSession session) {
+        User loggedInUser = (User) session.getAttribute("loggedInUser");
+        if (loggedInUser != null) {
+            model.addAttribute("userName", loggedInUser.getUserName());
+        }
         model.addAttribute("products", serv.getAllProducts());
         return "home"; 
     }
-	 @GetMapping("/login")
-	    public String showLoginPage() {
-	        return "login";
-	    }
-	 
-	 
-	 @Autowired
-	    private OrderRepo orderRepository;
 
-	    @PostMapping("/buy")
-	    public String buyNow(Model model) {
-	        model.addAttribute("order", new Order());
-	        return "orderForm";
-	    }
+    @GetMapping("/login")
+    public String showLoginPage() {
+        return "login";
+    }
 
-	    @PostMapping("/confirm-order")
-	    public String confirmOrder(@ModelAttribute Order order, RedirectAttributes redirectAttributes) {
-	       
-	        List<Cart> cartItems = cartRepository.findAll();
+    @PostMapping("/buy")
+    public String buyNow(Model model, HttpSession session) {
+        User loggedInUser = (User) session.getAttribute("loggedInUser");
+        if (loggedInUser != null) {
+            Order order = new Order();
+            order.setUser(loggedInUser);
+            order.setName(loggedInUser.getUserName());
+            order.setEmail(loggedInUser.getEmail());
+            order.setAddress(loggedInUser.getAddress());
+            order.setMobileNumber(loggedInUser.getMobilenumber());
+            List<Cart> cartItems = cartRepository.findByUserId(loggedInUser.getUserId());
+            for (Cart cartItem : cartItems) {
+                cartItem.setOrder(order);
+            }
+            order.setCartItems(cartItems);
+            order.setPaymentMethod("Credit Card");
+            model.addAttribute("order", order);
+        }
+        return "orderForm";
+    }
 
+    @PostMapping("/confirm-order")
+    public String confirmOrder(@ModelAttribute Order order, HttpSession session, RedirectAttributes redirectAttributes) {
+        User loggedInUser = (User) session.getAttribute("loggedInUser");
 
-	        for (Cart cartItem : cartItems) {
-	            
-	            order.setProductId(cartItem.getProductId());
-	            order.setProductName(cartItem.getProductName());
-	            order.setProductImagePath(cartItem.getProductImagePath());
-	            order.setPrice(cartItem.getPrice());
-	            order.setDescription(cartItem.getDescription());
+        if (loggedInUser == null) {
+            return "redirect:/login";
+        }
 
-	           
-	            cartItem.setOrder(order);
-	        }
+        List<Cart> cartItems = cartRepository.findByUserId(loggedInUser.getUserId());
 
-	        Order savedOrder = orderRepository.save(order);
+        for (Cart cartItem : cartItems) {
+            Order newOrder = new Order();
+            newOrder.setUser(loggedInUser);
+            newOrder.setName(loggedInUser.getUserName());
+            newOrder.setEmail(loggedInUser.getEmail());
+            newOrder.setAddress(loggedInUser.getAddress());
+            newOrder.setMobileNumber(loggedInUser.getMobilenumber());
+            newOrder.setProductId(cartItem.getProductId());
+            newOrder.setProductName(cartItem.getProductName());
+            newOrder.setDescription(cartItem.getDescription());
+            newOrder.setPrice(cartItem.getPrice());
+            newOrder.setProductImagePath(cartItem.getProductImagePath());
+            newOrder.setPaymentMethod(order.getPaymentMethod());
+            newOrder.setUser(cartItem.getUser());
+            orderRepository.save(newOrder);
+        }
 
-	        cartRepository.saveAll(cartItems);
+        cartRepository.deleteByUserUserId(loggedInUser.getUserId());
+        cartItemsCount = 0;
 
-	        cartRepository.deleteAll();
-	        cartItemsCount = 0;
+        redirectAttributes.addFlashAttribute("success", "Order placed successfully!");
+        return "order-sucess";
+    }
 
-	        redirectAttributes.addFlashAttribute("success", "Order placed successfully!");
-	        return "order-sucess";
-	    }
+    @PostMapping("/show-bill")
+    public String showBill(@ModelAttribute Order order, Model model, HttpSession session) {
+        User loggedInUser = (User) session.getAttribute("loggedInUser");
+        if (loggedInUser == null) {
+            return "redirect:/api/products/login";
+        }
+        List<Cart> cartItems = cartRepository.findByUserId(loggedInUser.getUserId());
+        double totalAmount = cartItems.stream().mapToDouble(Cart::getPrice).sum();
+        
+        for (Cart cartItem : cartItems) {
+            Order billOrder = new Order();
+            billOrder.setUser(cartItem.getUser());
+            billOrder.setName(order.getName());
+            billOrder.setEmail(order.getEmail());
+            billOrder.setAddress(order.getAddress());
+            billOrder.setMobileNumber(order.getMobileNumber());
+            billOrder.setProductId(cartItem.getProductId());
+            billOrder.setProductName(cartItem.getProductName());
+            billOrder.setProductImagePath(cartItem.getProductImagePath());
+            billOrder.setPrice(cartItem.getPrice());
+            billOrder.setDescription(cartItem.getDescription());
+            billOrder.setPaymentMethod(order.getPaymentMethod());
+            orderRepository.save(billOrder);
+        }
 
+        model.addAttribute("order", order);
+        model.addAttribute("cartItems", cartItems);
+        model.addAttribute("totalAmount", totalAmount);
+
+        return "bill"; 
+    }
+    
+    @Transactional
+    @PostMapping("/finalize-order")
+    public String finalizeOrder(@ModelAttribute Order order, RedirectAttributes redirectAttributes, HttpSession session) {
+        User loggedInUser = (User) session.getAttribute("loggedInUser");
+        if (loggedInUser == null) {
+            return "redirect:/api/products/login";
+        }
+
+        cartRepository.deleteByUserUserId(loggedInUser.getUserId());
+        cartItemsCount = 0;
+
+        redirectAttributes.addFlashAttribute("success", "Order placed successfully!");
+        return "order-sucess";
+    }
+
+    @GetMapping("/orders")
+    public String getOrdersForUser(Model model, HttpSession session) {
+        User loggedInUser = (User) session.getAttribute("loggedInUser");
+        
+        if (loggedInUser == null) {
+            return "redirect:/api/products/login"; // Updated redirect URL to match login endpoint
+        }
+
+        Long userId = loggedInUser.getUserId();
+        List<Order> userOrders = orderRepository.findByUser_UserId(userId);
+
+        model.addAttribute("userOrders", userOrders);
+        return "user-orders";
+    }
 }

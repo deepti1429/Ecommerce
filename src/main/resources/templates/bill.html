@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Bill</title>
+    <style>
+        .product-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .product-card {
+            border: 1px solid #ccc;
+            padding: 15px;
+            width: 200px;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .product-image img {
+            width: 100%;
+            height: auto;
+        }
+
+        .product-details {
+            text-align: center;
+        }
+
+        .product-details h2 {
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+
+        .product-details p {
+            margin: 5px 0;
+        }
+
+        .total-amount {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        .purchase-button {
+            display: block;
+            margin: 20px 0;
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .purchase-button:hover {
+            background-color: #218838;
+        }
+       
+    </style>
+</head>
+<body>
+    <h2>Delivery to</h2>
+    <div>
+        <p><strong>Name:</strong> <span th:text="${order.name}"></span></p>
+        <p><strong>Address:</strong> <span th:text="${order.address}"></span></p>
+        <p><strong>Email:</strong> <span th:text="${order.email}"></span></p>
+        <p><strong>Phone:</strong> <span th:text="${order.mobileNumber}"></span></p>
+        <p><strong>Payment Method:</strong> <span th:text="${order.paymentMethod}"></span></p>
+    </div>
+
+    <h2>Items</h2>
+    <div class="product-container">
+        <div th:each="cartItem : ${cartItems}" class="product-card">
+            <div class="product-image">
+                <img th:src="@{${cartItem.productImagePath}}" alt="Product Image"/>
+            </div>
+            <div class="product-details">
+                <h2 th:text="${cartItem.productName}"></h2>
+                <p th:text="${cartItem.description}"></p>
+                <p>Price: <span th:text="${cartItem.price}"></span></p>
+            </div>
+        </div>
+    </div>
+
+    <div class="total-amount">
+        Total Amount: $<span th:text="${totalAmount}"></span>
+    </div>
+
+    <form action="/api/products/finalize-order" method="post">
+        <button type="submit" class="purchase-button">Purchase</button>
+    </form>
+</body>
+</html>

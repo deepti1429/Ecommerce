@@ -7,35 +7,34 @@
 <body>
     <h1>Order Details</h1>
     
-    <form th:action="@{/api/products/confirm-order}" th:object="${order}" method="post">
-        <div>
-            <label for="name">Name:</label>
-            <input type="text" id="name" th:field="*{name}" required />
-        </div>
-        <div>
-            <label for="mobileNumber">Mobile Number:</label>
-            <input type="text" id="mobileNumber" th:field="*{mobileNumber}" required />
-        </div>
-        <div>
-            <label for="address">Address:</label>
-            <textarea id="address" th:field="*{address}" required></textarea>
-        </div>
-        <div>
-            <label for="email">Email:</label>
-            <input type="email" id="email" th:field="*{email}" required />
-        </div>
-        <div>
-            <label for="paymentMethod">Payment Method:</label>
-            <select id="paymentMethod" th:field="*{paymentMethod}" required>
-                <option value="Credit Card">Credit Card</option>
-                <option value="Debit Card">Debit Card</option>
-                <option value="PayPal">PayPal</option>
-                <option value="Cash on Delivery">Cash on Delivery</option>
-            </select>
-        </div>
-        <div>
-            <button type="submit">Confirm Order</button>
-        </div>
+    <form th:action="@{/api/products/show-bill}" th:object="${order}" method="post">
+ 
+        <label>Name:</label>
+        <input type="text" th:field="*{name}" required />
+        <br/>
+        
+        <label>Email:</label>
+        <input type="email" th:field="*{email}" required />
+        <br/>
+        
+        <label>Mobile Number:</label>
+        <input type="text" th:field="*{mobileNumber}" />
+        <br/>
+        
+        <label>Address:</label>
+        <textarea rows="4" th:field="*{address}" required></textarea>
+        <br/>
+        
+       
+        <label>Payment Method:</label>
+        <select th:field="*{paymentMethod}" required>
+            <option value="Credit Card" th:selected="${order.paymentMethod == 'Credit Card'}">Credit Card</option>
+            <option value="Debit Card" th:selected="${order.paymentMethod == 'Debit Card'}">Debit Card</option>
+            <option value="Cash on Delivery" th:selected="${order.paymentMethod == 'Cash on Delivery'}">Cash on Delivery</option>
+        </select>
+        <br/>
+        
+        <button type="submit">Confirm Order</button>
     </form>
 </body>
 </html>

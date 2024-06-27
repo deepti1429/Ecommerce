@@ -16,15 +16,32 @@
             <label for="username">Username:</label>
             <input type="text" id="username" name="userName" required>
         </div>
-        <div>
+        <div class="password-container">
             <label for="password">Password:</label>
             <input type="password" id="password" name="password" required>
+            <span class="eye-icon" onclick="togglePasswordVisibility()">
+                <img src="https://cdn-icons-png.flaticon.com/128/9458/9458496.png" alt="Show Password" id="eye-icon" width="40" height="40"/>
+            </span>
         </div>
-        <a href="/register">create a new Account?</a>
+        <a href="/register">Create a new Account?</a>
         <div>
             <button type="submit">Login</button>
         </div>
     </form>
 </div>
+
+<script>
+    function togglePasswordVisibility() {
+        var passwordField = document.getElementById("password");
+        var eyeIcon = document.getElementById("eye-icon");
+        if (passwordField.type === "password") {
+            passwordField.type = "text";
+            eyeIcon.src = "https://cdn-icons-png.flaticon.com/128/10812/10812267.png"; // Change to a different icon for "hide password"
+        } else {
+            passwordField.type = "password";
+            eyeIcon.src = "https://cdn-icons-png.flaticon.com/128/9458/9458496.png"; // Original eye icon
+        }
+    }
+</script>
 </body>
 </html>

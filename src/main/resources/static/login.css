@@ -50,9 +50,33 @@ body {
     box-sizing: border-box;
 }
 
+/* Container for password input and eye icon */
+.password-container {
+    position: relative;
+}
+
+.password-container input[type="password"] {
+    padding-right: 40px; /* Add space for the eye icon */
+}
+
+/* Styling the eye icon */
+.eye-icon {
+	
+    position: absolute;
+    top: 75%;
+    right: 10px;
+    transform: translateY(-50%);
+    cursor: pointer;
+}
+.eye-icon img {
+    width: 25px;
+    height: 25px;
+}
+
 /* Styling the submit button */
 .login-container button {
     background-color: #4CAF50;
+    margin-top:10px;
     color: white;
     padding: 10px 20px;
     border: none;
@@ -60,7 +84,13 @@ body {
     cursor: pointer;
     width: 100%;
 }
-
+a{
+	text-decoration:none;
+}
+a:hover{
+	text-decoration:underline;
+	color:#0831FE  ;
+}
 .login-container button:hover {
     background-color: #45a049;
 }
